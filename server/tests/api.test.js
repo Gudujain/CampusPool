@@ -5,7 +5,7 @@ const Ride = require('../models/Ride');
 const { outbox } = require('../utils/mailer');
 const h = require('./helpers');
 
-beforeAll(h.connect); afterAll(h.close); beforeEach(h.reset);
+beforeAll(h.connect, 15 * 60 * 1000); afterAll(h.close); beforeEach(h.reset);
 const api = () => request(app);
 
 describe('email OTP verification', () => {
