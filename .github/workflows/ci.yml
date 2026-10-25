@@ -1,0 +1,31 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: server } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: server/package-lock.json }
+      - run: npm ci
+      - run: npm test
+  client:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: client } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: client/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+  deploy:
+    needs: [server, client]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      # Optional: add a RENDER_DEPLOY_HOOK secret to deploy the API only after tests pass.
+      - run: '[ -n "$HOOK" ] && curl -fsS -X POST "$HOOK" || echo "No deploy hook set, skipping"'
+        env: { HOOK: "${{ secrets.RENDER_DEPLOY_HOOK }}" }
